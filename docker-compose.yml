@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  dotnetapp:
+    build:
+      context: ./PhishingSimulation
+      dockerfile: Dockerfile
+    container_name: dotnetapp
+    ports:
+      - "7198:8080"
+    env_file:
+      - ./PhishingSimulation/.env
+    depends_on:
+      - mongodb
+
+  nestjs_backend:
+    build:
+      context: ./nest-phishing-management
+      dockerfile: Dockerfile
+    container_name: nestjs_backend
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./nest-phishing-management/.env
+    depends_on:
+      - mongodb
+
+  react_app:
+    build:
+      context: ./react-front
+      dockerfile: Dockerfile
+    container_name: react_app
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./react-front/.env
+    depends_on:
+      - nestjs_backend
+
+volumes:
+  mongo_data:
